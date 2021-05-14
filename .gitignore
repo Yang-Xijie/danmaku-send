@@ -1,0 +1,8 @@
+# dotenv - require('dotenv').config() - process.env.XXX
+.env
+
+# macOS
+.DS_Store
+
+# oicq data
+data

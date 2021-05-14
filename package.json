@@ -1,0 +1,12 @@
+{
+  "name": "QQbot",
+  "version": "0.0.1",
+  "description": "my QQ bot",
+  "main": "index.js",
+  "author": "Yang Xijie",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^9.0.2",
+    "oicq": "^1.16.1"
+  }
+}
