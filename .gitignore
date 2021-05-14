@@ -6,3 +6,9 @@
 
 # oicq data
 data
+
+# playground
+playground/
+
+# get_danmu.py
+danmu.log
