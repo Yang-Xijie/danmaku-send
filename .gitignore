@@ -4,7 +4,7 @@
 # macOS
 .DS_Store
 
-# oicq data
+# oicq data - including account/ image/ record/
 data/
 
 # playground
