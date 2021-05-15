@@ -52,12 +52,13 @@ bot.on("message.group", (data) => {
       const subprocess = runGetDanmu(bilibili_room_id);
 
       subprocess_pid = subprocess.pid;
-      console.log(`pid: ${subprocess.pid}`);
+      console.log(`subprocess.pid: ${subprocess.pid}`);
+      console.log(`subprocess_pid: ${subprocess_pid}`);
 
       // print output of script
       subprocess.stdout.on("data", (output) => {
         console.log(`output:${output}`);
-        bot.sendGroupMsg(data.group_id, output); // FIXME 这里没有send
+        bot.sendGroupMsg(data.group_id, String(output)); // FIXME 这里没有send
       });
       subprocess.stderr.on("data", (error) => {
         console.log(`error:${error}`);
@@ -71,8 +72,13 @@ bot.on("message.group", (data) => {
     if (reg_check_message_stop_bilibili_danmu.test(received_message)) {
       bot.sendGroupMsg(data.group_id, "收到了停止转发的消息");
       // subprocess.kill('SIGHUP');
+      console.log(`stop_subprocess_pid: ${typeof subprocess_pid}`);
+      console.log(`stop_subprocess_pid: ${subprocess_pid}`);
+      // process.kill(subprocess_pid, "SIGINT"); // FIXME 这里没有kill
       if (subprocess_pid != -1) {
-        process.kill(subprocess_pid); // FIXME 这里没有kill
+        console.log(`stop_subprocess_pid: ${typeof subprocess_pid}`);
+        console.log(`stop_subprocess_pid: ${subprocess_pid}`);
+        process.kill(subprocess_pid, "SIGINT"); // FIXME 这里没有kill
         subprocess_pid = -1;
       }
       bot.sendGroupMsg(data.group_id, "嗯 停了");

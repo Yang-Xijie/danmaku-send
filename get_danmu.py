@@ -77,6 +77,6 @@ class Danmu():
 bDanmu = Danmu()
 while True:
     # 暂停防止cpu占用过高
-    time.sleep(1)
+    time.sleep(5)
     # 获取弹幕
     bDanmu.get_danmu()
