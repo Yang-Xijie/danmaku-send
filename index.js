@@ -57,7 +57,7 @@ bot.on("message.group", (data) => {
       // print output of script
       subprocess.stdout.on("data", (output) => {
         console.log(`output:${output}`);
-        bot.sendGroupMsg(data.group_id, output);
+        bot.sendGroupMsg(data.group_id, output); // FIXME 这里没有send
       });
       subprocess.stderr.on("data", (error) => {
         console.log(`error:${error}`);
@@ -72,7 +72,7 @@ bot.on("message.group", (data) => {
       bot.sendGroupMsg(data.group_id, "收到了停止转发的消息");
       // subprocess.kill('SIGHUP');
       if (subprocess_pid != -1) {
-        process.kill(subprocess_pid);
+        process.kill(subprocess_pid); // FIXME 这里没有kill
         subprocess_pid = -1;
       }
       bot.sendGroupMsg(data.group_id, "嗯 停了");
