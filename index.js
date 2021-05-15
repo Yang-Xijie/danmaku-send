@@ -15,7 +15,11 @@ function runGetDanmu(roomid) {
   ]);
 }
 
-function deleteDanmuLog(fda) {
+function runCatDanmuLog() {
+  return spawn("cat", [path.join(__dirname, "danmu.log")]);
+}
+
+function deleteDanmuLog() {
   return spawn("rm", [path.join(__dirname, "danmu.log")]);
 }
 
@@ -44,6 +48,7 @@ bot.on("message.group", (data) => {
 
     // console.log(received_message);
 
+    // [处理转发]
     const reg_check_message_bilibili_danmu =
       /^转发((B|b)(站|ilibili)|)(直播|)[0-9]*(弹幕|)$/;
     if (reg_check_message_bilibili_danmu.test(received_message)) {
@@ -55,8 +60,8 @@ bot.on("message.group", (data) => {
       const subprocess = runGetDanmu(bilibili_room_id);
 
       subprocess_pid = subprocess.pid;
-      console.log(`subprocess.pid: ${subprocess.pid}`);
-      console.log(`subprocess_pid: ${subprocess_pid}`);
+      // console.log(`subprocess.pid: ${subprocess.pid}`);
+      // console.log(`subprocess_pid: ${subprocess_pid}`);
 
       // print output of script
       subprocess.stdout.on("data", (output) => {
@@ -76,6 +81,7 @@ bot.on("message.group", (data) => {
       });
     }
 
+    // [处理停止转发]
     const reg_check_message_stop_bilibili_danmu = /^停止(转发|)$/;
     if (reg_check_message_stop_bilibili_danmu.test(received_message)) {
       // bot.sendGroupMsg(data.group_id, "收到了停止转发的消息");
@@ -85,6 +91,24 @@ bot.on("message.group", (data) => {
         subprocess_pid = -1;
       }
       bot.sendGroupMsg(data.group_id, "嗯 停了");
+
+      // TODO 这里把danmu.log的所有内容发在群里（注意：oicq暂不支持发文件）
+      const subprocess_cat_danmu_log = runCatDanmuLog();
+
+      subprocess_cat_danmu_log.stdout.on("data", (output) => {
+        // no_blankline_danmu = String(output)
+        //   .replace(/(\n[\s\t]*\r*\n)/g, "\n")
+        //   .replace(/^[\n\r\n\t]*|[\n\r\n\t]*$/g, "");
+        // console.log(`output: ${no_blankline_danmu}`);
+        summary_msg = "[所有弹幕]\n" + String(output);
+        no_blankline_summary_msg = String(summary_msg)
+          .replace(/(\n[\s\t]*\r*\n)/g, "\n")
+          .replace(/^[\n\r\n\t]*|[\n\r\n\t]*$/g, "");
+
+        bot.sendGroupMsg(data.group_id, summary_msg).then(() => {
+          deleteDanmuLog();
+        });
+      });
     }
   }
 });
