@@ -7,7 +7,13 @@ import requests
 import time
 
 parser = argparse.ArgumentParser(description='Get danmu in Bilibili stream.')
-parser.add_argument('-r', '--roomid', help='bilibili room id')
+parser.add_argument('-r',
+                    '--roomid',
+                    help='Bilibili stream room id which is in the link.')
+parser.add_argument('-t',
+                    '--iterval',
+                    help='Interval(sec) for fetching danmaku.',
+                    default='5')
 
 args = parser.parse_args()
 
@@ -55,13 +61,19 @@ class Danmu():
             timeline = content['timeline']
 
             simple_time = timeline.split(' ')[1]
+            simple_hour = simple_time.split(':')[0]
+            simple_min = simple_time.split(':')[1]
+            simple_second = simple_time.split(':')[2]
 
             # 记录发言
-            msg = simple_time + ' ' + nickname + ': ' + text
+            # msg = simple_hour + ':' + simple_min + ' ' + nickname + '：' + text
+            msg = nickname + '：' + text
+            msg = msg[::-1].replace('\n', '', 1)[::-1]
             # 判断对应消息是否存在于日志，如果和最后一条相同则打印并保存
             if msg + '\n' not in self.log:
                 # 打印消息
-                print(msg)
+                if msg != '':
+                    print(msg)
                 # 保存日志
                 self.log_file_write.write(msg + '\n')
                 # 添加到日志列表
@@ -77,6 +89,6 @@ class Danmu():
 bDanmu = Danmu()
 while True:
     # 暂停防止cpu占用过高
-    time.sleep(5)
+    time.sleep(int(args.iterval))
     # 获取弹幕
     bDanmu.get_danmu()

@@ -15,6 +15,10 @@ function runGetDanmu(roomid) {
   ]);
 }
 
+function deleteDanmuLog(fda) {
+  return spawn("rm", [path.join(__dirname, "danmu.log")]);
+}
+
 // 监听上线事件
 bot.on("system.online", () => console.log("Logged in!"));
 
@@ -31,14 +35,14 @@ var subprocess_pid = -1; // 在bot.on里面设置变量的话
 
 // 监听群聊
 bot.on("message.group", (data) => {
-  bot.sendGroupMsg(data.group_id, "hello");
+  // bot.sendGroupMsg(data.group_id, "hello");
 
   if (data.group_id == 205059735) {
-    bot.sendGroupMsg(data.group_id, "我在");
+    // bot.sendGroupMsg(data.group_id, "我在");
 
     const received_message = data.message[0].data.text;
 
-    console.log(received_message);
+    // console.log(received_message);
 
     const reg_check_message_bilibili_danmu =
       /^转发((B|b)(站|ilibili)|)(直播|)[0-9]*(弹幕|)$/;
@@ -56,23 +60,28 @@ bot.on("message.group", (data) => {
 
       // print output of script
       subprocess.stdout.on("data", (output) => {
-        console.log(`output:${output}`);
-        bot.sendGroupMsg(data.group_id, String(output)); // 注意这里要send的话，需要将output转换为String()
+        // console.log(`output: ${String(output)}`);
+        // 删掉空行：https://blog.csdn.net/IT_arookie/article/details/103610875
+        no_blankline_danmu = String(output)
+          .replace(/(\n[\s\t]*\r*\n)/g, "\n")
+          .replace(/^[\n\r\n\t]*|[\n\r\n\t]*$/g, "");
+        // console.log(`output: ${no_blankline_danmu}`);
+        bot.sendGroupMsg(data.group_id, no_blankline_danmu); // 注意这里要send的话，需要将output转换为String()
       });
       subprocess.stderr.on("data", (error) => {
-        console.log(`error:${error}`);
+        console.log(`error: ${error}`);
       });
       subprocess.on("close", () => {
         console.log("Python script finished.");
       });
     }
 
-    const reg_check_message_stop_bilibili_danmu = /停止(转发|)/;
+    const reg_check_message_stop_bilibili_danmu = /^停止(转发|)$/;
     if (reg_check_message_stop_bilibili_danmu.test(received_message)) {
-      bot.sendGroupMsg(data.group_id, "收到了停止转发的消息");
+      // bot.sendGroupMsg(data.group_id, "收到了停止转发的消息");
       console.log(`stop_subprocess_pid: ${subprocess_pid}`);
       if (subprocess_pid != -1) {
-        process.kill(subprocess_pid, "SIGINT"); 
+        process.kill(subprocess_pid, "SIGINT");
         subprocess_pid = -1;
       }
       bot.sendGroupMsg(data.group_id, "嗯 停了");
