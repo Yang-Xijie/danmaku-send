@@ -1,9 +1,20 @@
 require("dotenv").config();
 
-const { connectLogger } = require("log4js");
+const { connectLogger } = require("log4js"); // TODO delete
 const { createClient } = require("oicq");
 const uin = process.env.QQ_ACCOUNT; // your account
 const bot = createClient(uin);
+const path = require("path");
+const { spawn } = require("child_process");
+
+function runGetDanmu(roomid) {
+  return spawn("python3", [
+    "-u",
+    path.join(__dirname, "get_danmu.py"),
+    "--roomid",
+    roomid,
+  ]);
+}
 
 // 监听上线事件
 bot.on("system.online", () => console.log("Logged in!"));
@@ -26,19 +37,45 @@ bot.on("message.group", (data) => {
 
     const received_message = data.message[0].data.text;
 
+    console.log(received_message);
+
+    var subprocess_pid = -1;
+
     const reg_check_message_bilibili_danmu =
-      /转发((B|b)(站|ilibili)|)(直播|)[0-9]*(弹幕|)/;
-    const reg_get_bilibili_room_id = /[0-9]*/;
-
-    console.log(data.message[0].data);
-    console.log(data.message[0].data.text);
-
+      /^转发((B|b)(站|ilibili)|)(直播|)[0-9]*(弹幕|)$/;
     if (reg_check_message_bilibili_danmu.test(received_message)) {
-      const bilibili_room_id = received_message.replace(/[^0-9]/ig, ""); // 提取数字room_id
-      console.log("haha");
-      console.log(bilibili_room_id);
-      console.log("haha");
+      const bilibili_room_id = received_message.replace(/[^0-9]/gi, ""); // 提取数字room_id
+      console.log(`roomid: ${bilibili_room_id}`);
       bot.sendGroupMsg(data.group_id, "要开始转发了哦～");
+
+      // 使用python脚本创建子进程进而获取输出值
+      const subprocess = runGetDanmu(bilibili_room_id);
+
+      subprocess_pid = subprocess.pid;
+      console.log(`pid: ${subprocess.pid}`);
+
+      // print output of script
+      subprocess.stdout.on("data", (output) => {
+        console.log(`output:${output}`);
+        bot.sendGroupMsg(data.group_id, output);
+      });
+      subprocess.stderr.on("data", (error) => {
+        console.log(`error:${error}`);
+      });
+      subprocess.on("close", () => {
+        console.log("Python script finished.");
+      });
+    }
+
+    const reg_check_message_stop_bilibili_danmu = /停止(转发|)/;
+    if (reg_check_message_stop_bilibili_danmu.test(received_message)) {
+      bot.sendGroupMsg(data.group_id, "收到了停止转发的消息");
+      // subprocess.kill('SIGHUP');
+      if (subprocess_pid != -1) {
+        process.kill(subprocess_pid);
+        subprocess_pid = -1;
+      }
+      bot.sendGroupMsg(data.group_id, "嗯 停了");
     }
   }
 });

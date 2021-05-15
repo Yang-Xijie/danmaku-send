@@ -5,7 +5,7 @@
 .DS_Store
 
 # oicq data
-data
+data/
 
 # playground
 playground/
