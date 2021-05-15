@@ -1,6 +1,5 @@
 require("dotenv").config();
 
-const { connectLogger } = require("log4js"); // TODO delete
 const { createClient } = require("oicq");
 const uin = process.env.QQ_ACCOUNT; // your account
 const bot = createClient(uin);
@@ -28,6 +27,8 @@ bot.on("message.private", (data) => {
   if (data.user_id == 564197835) data.reply("怎么是你");
 });
 
+var subprocess_pid = -1; // 在bot.on里面设置变量的话
+
 // 监听群聊
 bot.on("message.group", (data) => {
   bot.sendGroupMsg(data.group_id, "hello");
@@ -38,8 +39,6 @@ bot.on("message.group", (data) => {
     const received_message = data.message[0].data.text;
 
     console.log(received_message);
-
-    var subprocess_pid = -1;
 
     const reg_check_message_bilibili_danmu =
       /^转发((B|b)(站|ilibili)|)(直播|)[0-9]*(弹幕|)$/;
@@ -58,7 +57,7 @@ bot.on("message.group", (data) => {
       // print output of script
       subprocess.stdout.on("data", (output) => {
         console.log(`output:${output}`);
-        bot.sendGroupMsg(data.group_id, String(output)); // FIXME 这里没有send
+        bot.sendGroupMsg(data.group_id, String(output)); // 注意这里要send的话，需要将output转换为String()
       });
       subprocess.stderr.on("data", (error) => {
         console.log(`error:${error}`);
@@ -71,14 +70,9 @@ bot.on("message.group", (data) => {
     const reg_check_message_stop_bilibili_danmu = /停止(转发|)/;
     if (reg_check_message_stop_bilibili_danmu.test(received_message)) {
       bot.sendGroupMsg(data.group_id, "收到了停止转发的消息");
-      // subprocess.kill('SIGHUP');
-      console.log(`stop_subprocess_pid: ${typeof subprocess_pid}`);
       console.log(`stop_subprocess_pid: ${subprocess_pid}`);
-      // process.kill(subprocess_pid, "SIGINT"); // FIXME 这里没有kill
       if (subprocess_pid != -1) {
-        console.log(`stop_subprocess_pid: ${typeof subprocess_pid}`);
-        console.log(`stop_subprocess_pid: ${subprocess_pid}`);
-        process.kill(subprocess_pid, "SIGINT"); // FIXME 这里没有kill
+        process.kill(subprocess_pid, "SIGINT"); 
         subprocess_pid = -1;
       }
       bot.sendGroupMsg(data.group_id, "嗯 停了");
